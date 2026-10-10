@@ -8,6 +8,10 @@ IMAGE_OCID=$(oci compute image list --compartment-id "$OCI_TENANCY" \
   --shape VM.Standard.A1.Flex --sort-by TIMECREATED --sort-order DESC \
   --limit 1 --query 'data[0].id' --raw-output)
 
+if [ -z "$IMAGE_OCID" ]; then echo "Image lookup returned nothing"; exit 2; fi
+
+SOURCE="{\"sourceType\":\"image\",\"imageId\":\"$IMAGE_OCID\",\"bootVolumeSizeInGBs\":$BOOT_GB,\"bootVolumeVpusPerGB\":10}"
+
 AGENT='{"isMonitoringDisabled":false,"isManagementDisabled":true,"areAllPluginsDisabled":false,"pluginsConfig":[
 {"name":"Vulnerability Scanning","desiredState":"DISABLED"},
 {"name":"Compute Instance Monitoring","desiredState":"ENABLED"},
@@ -26,12 +30,10 @@ for AD in $(oci iam availability-domain list --compartment-id "$OCI_TENANCY" \
     --display-name ServerV3 \
     --shape VM.Standard.A1.Flex \
     --shape-config '{"ocpus":2,"memoryInGBs":12}' \
-    --image-id "$IMAGE_OCID" \
+    --source-details "$SOURCE" \
     --subnet-id "$SUBNET_OCID" \
     --vnic-display-name SV3_VNIC \
     --assign-public-ip true \
-    --boot-volume-size-in-gbs "$BOOT_GB" \
-    --boot-volume-vpus-per-gb 10 \
     --is-pv-encryption-in-transit-enabled true \
     --instance-options '{"areLegacyImdsEndpointsDisabled":true}' \
     --agent-config "$AGENT" \
@@ -44,6 +46,6 @@ for AD in $(oci iam availability-domain list --compartment-id "$OCI_TENANCY" \
   fi
   if echo "$out" | grep -qiE "out of (host )?capacity"; then echo "No capacity in $AD"; continue; fi
   if echo "$out" | grep -qiE "TooManyRequests|429"; then sleep 60; continue; fi
-  echo "$out"; exit 2   # a real error, fail loudly
+  echo "$out"; exit 2
 done
 exit 0
