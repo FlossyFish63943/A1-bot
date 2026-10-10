@@ -24,22 +24,22 @@ jobs:
           mkdir -p ~/.oci
           echo "$OCI_KEY" > ~/.oci/key.pem
           chmod 600 ~/.oci/key.pem
-          cat > ~/.oci/config <<EOF
-          [DEFAULT]
-          user=$OCI_USER
-          fingerprint=$OCI_FINGERPRINT
-          tenancy=$OCI_TENANCY
-          region=us-phoenix-1
-          key_file=$HOME/.oci/key.pem
-          EOF
+          {
+            echo "[DEFAULT]"
+            echo "user=$OCI_USER"
+            echo "fingerprint=$OCI_FINGERPRINT"
+            echo "tenancy=$OCI_TENANCY"
+            echo "region=us-phoenix-1"
+            echo "key_file=$HOME/.oci/key.pem"
+          } > ~/.oci/config
       - name: Try to launch
         env:
           OCI_TENANCY: ${{ secrets.OCI_TENANCY }}
-          COMPARTMENT_OCID: ${{ secrets.OCI_TENANCY }}   # root compartment = tenancy OCID
+          COMPARTMENT_OCID: ${{ secrets.OCI_TENANCY }}
           SUBNET_OCID: ${{ secrets.SUBNET_OCID }}
           SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           GH_TOKEN: ${{ github.token }}
         run: |
-	  sed -i 's/\r$//' launch.sh
-	  bash launch.sh
+          sed -i 's/\r$//' launch.sh
+          bash launch.sh
