@@ -40,4 +40,6 @@ jobs:
           SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           GH_TOKEN: ${{ github.token }}
-        run: bash launch.sh
+        run: |
+	  sed -i 's/\r$//' launch.sh
+	  bash launch.sh
